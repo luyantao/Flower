@@ -17,11 +17,11 @@ import NetworkLinux
 extension Connection {
     
     public func readMessages(handler: @escaping (Message) -> Void) {
-        
-        self.receive(minimumIncompleteLength: 2, maximumLength: 2) { (maybeData, maybeContext, isComplete, maybeError) in
-            
+                    
+        self.receive(minimumIncompleteLength: 1, maximumLength: 10000, completion: { (maybeData, maybeContext, isComplete, maybeError) in
+
             if let error = maybeError {
-                print("Error when calling receive (message length) from readMessages: \(error)")
+                print("Error when calling receive (message body) from readMessages: \(error)")
                 return
             }
             
@@ -29,27 +29,12 @@ extension Connection {
                 return
             }
             
-            let length = Int(data.uint16!)
+            guard let message = Message(data: data) else {
+                return
+            }
             
-            self.receive(minimumIncompleteLength: length, maximumLength: length, completion: { (maybeData, maybeContext, isComplete, maybeError) in
-
-                if let error = maybeError {
-                    print("Error when calling receive (message body) from readMessages: \(error)")
-                    return
-                }
-                
-                guard let data = maybeData else {
-                    return
-                }
-                
-                guard let message = Message(data: data) else {
-                    return
-                }
-                
-                handler(message)
-                self.readMessages(handler: handler)
-            })
-        }
+            handler(message)
+        })
     }
 
     public func writeMessage(message: Message, completion: @escaping (NWError?) -> Void) {
