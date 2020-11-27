@@ -55,7 +55,7 @@ extension Connection {
     public func writeMessage(message: Message, completion: @escaping (NWError?) -> Void) {
         var data = Data()
         data.append(UInt8(0))
-        data.append(UInt16(message.data.count).data)
+        data.append(UInt16(bigEndian: UInt16(message.data.count)).data)
         data.append(message.data)
         
         self.send(content: data, contentContext: NWConnection.ContentContext.defaultMessage, isComplete: false, completion: NWConnection.SendCompletion.contentProcessed( { (maybeLengthError) in
