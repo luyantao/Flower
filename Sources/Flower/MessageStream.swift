@@ -53,12 +53,21 @@ extension Connection {
     }
 
     public func writeMessage(message: Message, completion: @escaping (NWError?) -> Void) {
-        var data = Data()
-        data.append(UInt8(0))
-        data.append(UInt16(bigEndian: UInt16(message.data.count)).data)
-        data.append(message.data)
+        var data2 = Data()
+
+        switch message {
         
-        self.send(content: data, contentContext: NWConnection.ContentContext.defaultMessage, isComplete: false, completion: NWConnection.SendCompletion.contentProcessed( { (maybeLengthError) in
+        case .IPDataV4(let data):
+            data2.append(UInt8(0))
+            data2.append(UInt16(data.count).data)
+            data2.append(data)
+
+        default:
+            completion(nil) // TODO
+            return
+        }
+        
+        self.send(content: data2, contentContext: NWConnection.ContentContext.defaultMessage, isComplete: false, completion: NWConnection.SendCompletion.contentProcessed( { (maybeLengthError) in
                 
                 if let lengthError = maybeLengthError {
                     print("Error sending length bytes. Error: \(lengthError)")
